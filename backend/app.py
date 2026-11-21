@@ -1,12 +1,9 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from utils.imagerec import img_detect_items
-from utils.api_tool import get_recipe_instruction
-from ai import graph, process_user_input
-import json
-from spoonacular import SearchRecipes200ResponseResultsInner
+from ai import process_user_input
 import os
-import subprocess
+import tempfile
 
 
 app = Flask(__name__)
@@ -52,35 +49,19 @@ def upload_photo():
     if not photo_data_url:
         return jsonify({"error": "No photo data provided"}), 400
 
-    # Save the base64 image to a temporary file
     import base64
     header, encoded = photo_data_url.split(",", 1)
     binary_data = base64.b64decode(encoded)
-    temp_image_path = "temp_image.jpg"
-    with open(temp_image_path, "wb") as f:
-        f.write(binary_data)
+    mime_type = header.split(";", 1)[0].removeprefix("data:")
 
-    # Call the Python script to process the image
     try:
-        result = subprocess.run(
-            ["python3", "imagerec.py", temp_image_path],
-            capture_output=True,
-            text=True
-        )
-        if result.returncode != 0:
-            return jsonify({"error": "Failed to process image", "details": result.stderr}), 500
-
-        # Parse the output from the script
-        detected_items = result.stdout.strip()
+        with tempfile.NamedTemporaryFile(suffix=".png") as image:
+            image.write(binary_data)
+            image.flush()
+            detected_items = img_detect_items(image.name, mime_type=mime_type)
         return jsonify({"detected_items": detected_items})
-
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-    finally:
-        # Clean up the temporary file
-        if os.path.exists(temp_image_path):
-            os.remove(temp_image_path)
 
 if __name__ == '__main__':
     app.run(debug=True)

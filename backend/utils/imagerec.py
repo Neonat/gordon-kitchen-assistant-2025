@@ -37,11 +37,11 @@ model = genai.GenerativeModel(
   '''
 )
 
-def img_detect_items(img_path):
+def img_detect_items(img_path, mime_type="image/jpeg"):
     
     # You may need to update the file paths
     files = [
-    upload_to_gemini(img_path, mime_type="image/jpeg"),
+    upload_to_gemini(img_path, mime_type=mime_type),
     ]
 
     chat_session = model.start_chat(

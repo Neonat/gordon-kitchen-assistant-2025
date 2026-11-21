@@ -9,7 +9,7 @@ function PhotoPreview({ photo, onClose }) {
     if (photo) {
       setIsSending(true); // Set loading state
       try {
-        const response = await fetch('http://localhost:5000/upload-photo', {
+        const response = await fetch('http://localhost:5000/api/upload-photo', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json', 
@@ -20,7 +20,7 @@ function PhotoPreview({ photo, onClose }) {
   
         if (response.ok) {
           const data = await response.json();
-          setBackendResponse(data.items || 'No items detected');
+          setBackendResponse(data.detected_items || 'No items detected');
           alert("Photo successfully analyzed!");
         } else {
           alert("Failed to analyze the photo. Status: " + response.status);

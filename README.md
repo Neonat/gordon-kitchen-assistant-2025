@@ -9,11 +9,11 @@ A **Hackomania 2025** kitchen-assistant prototype exploring how available ingred
 - Backend helpers use Gemini for food-image and audio experiments; the recipe workflow can call the Spoonacular tool.
 - The ingredients page displays sample Pasta and Pizza recipe cards. Shopping-list and community-sharing ideas remain prototype interface concepts.
 
-The intended flow is ingredient capture followed by recipe discovery. The committed camera path still needs integration work, and the example recipe cards are not generated from a live inventory.
+The intended flow is ingredient capture followed by recipe discovery. The camera path sends a captured image to the recognition helper. The example recipe cards are not generated from a live inventory.
 
 ## Local setup
 
-You need Python 3 with `venv`, Node.js/npm, and your own Google Gemini and Spoonacular API access for the connected features.
+You need Python 3.9+ with `venv`, Node.js 20+ with npm, and your own Google Gemini and Spoonacular API access for the connected features.
 
 ```sh
 git clone https://github.com/Neonat/gordon-kitchen-assistant-2025.git
@@ -54,7 +54,7 @@ Open the [text-input page](http://localhost:3000/textinput), [ingredients page](
 
 ## Current integration gaps
 
-The camera frontend sends `/upload-photo` and reads `items`; the backend exposes `/api/upload-photo` and returns `detected_items`. The backend also launches `imagerec.py` from its working directory while the helper is under `backend/utils/`. Those mismatches prevent the documented camera flow from working end to end as committed.
+The camera frontend posts to `/api/upload-photo` and displays `detected_items`. Flask passes the captured image and MIME type to `backend/utils/imagerec.py` using a separate temporary file for each request.
 
 The checked-in Gemini model identifiers and external API behaviour have not been verified against current services. This setup describes the committed source; connected AI/API calls require provider access and separate integration validation.
 
@@ -68,9 +68,10 @@ npm run build
 npm test -- --watchAll=false --passWithNoTests
 ```
 
-The frontend currently has no checked-in test files. Backend syntax can be checked from the repository root without starting the API or making model requests:
+The frontend pins TypeScript 4.9.5 to match Create React App 5's supported toolchain. The frontend test checks the camera request and displayed result with a mocked response. From the repository root, check the Flask camera route with a mocked recognition helper and check backend syntax:
 
 ```sh
+python3 -m unittest discover -s backend/tests -v
 python3 -m compileall -q backend
 ```
 
